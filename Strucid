@@ -65,20 +65,14 @@ function functions.Crasher(t)
     loadstring(game:HttpGet(('https://raw.githubusercontent.com/Ihaveash0rtnamefordiscord/Releases/main/Strucid_ServerCrasher')))(' Watermelon ? ')
 end;
 
+local function getui()
+    if string.find(lp.PlayerGui.MenuUI.VoteKick.Title,Text, lp.Name) then 
+        game:GetService("TeleportService"):Teleport(game.PlaceId, lp)
+    end;
+end;
+
 function functions.AntiKick(t)
     if not t then return end
-
-    local function getui()
-        if string.find(lp.PlayerGui.MenuUI.VoteKick.Title,Text, lp.Name) then 
-            game:GetService("TeleportService"):Teleport(game.PlaceId, lp)
-        end;
-    end;
-
-    while task.wait() and t do
-        pcall(function()
-            getui()
-        end);
-    end;
 end;
 
 function functions.NoFall(t)
@@ -89,6 +83,10 @@ function functions.NoFall(t)
             require(game.ReplicatedStorage.Modules.NetworkModule2):FireServer("Bouncing")
         end
     end;
+end;
+
+function functions.AntiSpectate(t)
+    if not t then return end
 end;
 
 -- Rage
@@ -122,5 +120,20 @@ mm:AddToggle({Name = "No Fall Damage", Default = false, Flag = "NOFD", Callback 
 
 mm:AddToggle({Name = "Anti-Kick", Default = true, Flag = "Antikick", Callback = functions.AntiKick});
 
+mm:AddToggle({Name = "Anti-Spectate", Default = true, Flag = "AntiSpec", Callback = functions.AntiSpectate});
+
 OrionLib:Init()
+
+task.spawn(function()
+    while task.wait(1) do
+        if getflag("Antikick") then
+            pcall(function()
+                getui()
+            end);
+        end;
+        if getflag("AntiSpec") then
+            game.ReplicatedStorage.Network.LookDir:FireServer(0/0)
+        end;
+    end;
+end);
 
