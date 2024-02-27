@@ -99,7 +99,7 @@ end;
 function functions.AntiBuild(t)
     if not t then return end
 
-    while task.wait(1) and t do
+    while task.wait(0.2) and t do
         for _, v in ipairs(game:GetService("Workspace").BuildStuff:GetChildren()) do
             game.ReplicatedStorage.Network.Remotes.Edit:FireServer(v, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)
         end
