@@ -3,10 +3,27 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/MercyfulSmoked/localhub/main/tester')))();
 local fl = OrionLib.Flags
 
+-- ESP Function
+local ESP = loadstring(game:HttpGet("https://kiriot22.com/releases/ESP.lua"))()
+ESP:Toggle(true)
+
+-- Don't worry about it
+ESP.Players = false
+ESP.Color = Color3.new(1,1,1)
+ESP.Traces = false
+ESP.Names = false
+ESP.Boxes = false
+ESP.NPCs = false
+ESP.Items = false
+ESP.Enemies = false
+
 local win = OrionLib:MakeWindow({Name = "Strucid", HidePremium = true,  IntroEnabled = false});
+
 
 local lt = win:MakeTab({Name = "Legit",Icon = "", PremiumOnly = false});
 local rt = win:MakeTab({Name = "Rage",Icon = "", PremiumOnly = false});
+local et = win:MakeTab({Name = "ESP",Icon = "", PremiumOnly = false});
+
 local mm = win:MakeTab({Name = "Misc Toggles",Icon = "", PremiumOnly = false});
 local mb = win:MakeTab({Name = "Misc Buttons",Icon = "", PremiumOnly = false});
 
@@ -16,6 +33,12 @@ local Players = game:GetService("Players");
 local TweenService = game:GetService("TweenService");
 
 local Mouse = lp:GetMouse();
+
+-- Modules
+
+local FI = Instance.new("ModuleScript", lp.PlayerGui);
+FI.Name = "Extra";
+FI:SetAttribute("O", true);
 
 -- Functions
 local functions = {}
@@ -40,7 +63,7 @@ function functions.extend_hitbox(t)
         for _, player in ipairs(game.Players:GetChildren()) do
             if player ~= lp and player.Character and player.Character:FindFirstChild("Head") then
                 local vhrp = player.Character[getflag("Part")]
-                if game.PlaceId == 3606833500 or player.Team ~= lp.Team then
+                if game.PlaceId == 3606833500 or player.Team ~= lp.Team or player.Team == nil then
                     if vhrp.Name == "Head" and slideExtend > 5 then
                         vhrp.Size = Vector3.new(5,5,5)
                     else
@@ -63,11 +86,22 @@ end;
 
 function functions.Crasher(t)
     if not t then return end
-    loadstring(game:HttpGet(('https://raw.githubusercontent.com/Ihaveash0rtnamefordiscord/Releases/main/Strucid_ServerCrasher')))(' Watermelon ? ')
+    if getchar() then
+       while task.wait() and t and getchar() do 
+            for i = 1, 20 do 
+                if not t then return end
+                for _, v in ipairs(game.ReplicatedStorage.Emotes:GetChildren()) do
+                    game.ReplicatedStorage.Network.Remotes.Animate:FireServer("Emote", v.Name)
+                end
+            end;
+       end;
+    else
+        OrionLib:MakeNotification({Name = "You're in the lobby", Content = "Enter the game for it to work",Time = 5})
+    end
 end;
 
 local function getui()
-    if string.find(lp.PlayerGui.MenuUI.VoteKick.Title,Text, lp.Name) then 
+    if lp.PlayerGui.MenuUI.VoteKick.Title.Text == "Vote Kick <font color = '#FFA500'>" .. lp.Name .. "</font>?" then 
         game:GetService("TeleportService"):Teleport(game.PlaceId, lp)
     end;
 end;
@@ -99,11 +133,63 @@ end;
 function functions.AntiBuild(t)
     if not t then return end
 
-    while task.wait(0.2) and t do
+    while task.wait(0.2) and getflag("AntiBuild") do
         for _, v in ipairs(game:GetService("Workspace").BuildStuff:GetChildren()) do
-            game.ReplicatedStorage.Network.Remotes.Edit:FireServer(v, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)
+            if not lp.Character:GetAttribute("IsMenuChar") then
+                game.ReplicatedStorage.Network.Remotes.Edit:FireServer(v, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)
+            end;
         end
     end;
+end;
+
+function functions.Rejoin()
+    game:GetService("TeleportService"):Teleport(game.PlaceId, lp)
+end;
+
+function create_ESP(v)
+    local bb = Instance.new("BillboardGui")
+    bb.Name = "Test"
+    bb.Active = true
+    bb.AlwaysOnTop = true
+    bb.ClipsDescendants = true
+    bb.LightInfluence = 1
+    bb.Size = UDim2.new(0,50,0,50)
+    bb.StudsOffset = Vector3.new(0,1,0)
+    bb.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    local tt = Instance.new("TextLabel",bb)
+    tt.Text = v.Name
+    tt.TextScaled = true
+    tt.TextColor3 = Color3.new(getflag("ESPCOLOR").R,getflag("ESPCOLOR").G,getflag("ESPCOLOR").B)
+    tt.TextSize = 14
+    tt.TextWrapped = true
+    tt.Size = UDim2.new(1,0,1,0)
+    tt.BackgroundTransparency = 1
+    tt.TextStrokeTransparency = 0
+
+    if v:FindFirstChild("HumanoidRootPart") and not v.HumanoidRootPart:FindFirstChild("Test") then
+        bb:Clone().Parent = v.HumanoidRootPart
+    elseif v:FindFirstChild("HumanoidRootPart") and v.HumanoidRootPart:FindFirstChild("Test") then
+        v.HumanoidRootPart:FindFirstChild("Test").TextLabel.TextColor3 = Color3.new(getflag("ESPCOLOR").R,getflag("ESPCOLOR").G,getflag("ESPCOLOR").B)
+    end;
+end;
+
+function functions.NamesESP(t)
+    if not t then return end
+
+    while task.wait() and getflag("Names") do
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            if player ~= lp and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                if game.PlaceId == 3606833500 or player.Team ~= lp.Team or lp.Team == nil then
+                    create_ESP(player.Character)
+                end
+            end
+        end
+    end;
+end;
+
+function functions.BoxesESP(t)
+    
 end;
 
 -- Rage
@@ -129,6 +215,12 @@ lt:AddColorpicker({Name = "Color of hitbox", Default = Color3.fromRGB(0,0,0), Fl
 -- Rage
 
 
+-- ESP
+
+et:AddToggle({Name = "Names", Default = false, Flag = "Names", Callback = functions.NamesESP});
+
+et:AddColorpicker({Name = "Color", Default = Color3.fromRGB(1,1,1), Flag = "ESPCOLOR", Callback = function(t) end})
+
 -- Misc
 
 mm:AddToggle({Name = "Crash server (Spawn in)", Default = false, Flag = "Crasher", Callback = functions.Crasher});
@@ -141,7 +233,10 @@ mm:AddToggle({Name = "Anti-Spectate", Default = true, Flag = "AntiSpec", Callbac
 
 mm:AddToggle({Name = "Anti-Build", Default = false, Flag = "AntiBuild", Callback = functions.AntiBuild});
 
+
 mb:AddButton({Name = "Destroy buildings",Callback = functions.DestroyBuild})
+
+mb:AddButton({Name = "Rejoin",Callback = functions.Rejoin})
 
 OrionLib:Init()
 
