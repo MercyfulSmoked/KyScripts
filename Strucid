@@ -1,47 +1,114 @@
+getgenv().Loading = true
+for _,v in ipairs(game.CoreGui:GetChildren()) do 
+    if v.Name == "ScreenGui" then 
+        v:Destroy();
+    end;
+end;
 
--- Lib
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/MercyfulSmoked/localhub/main/tester')))();
-local fl = OrionLib.Flags
+if getgenv().Library then
+    getgenv().Library:Unload()
+end;
 
--- ESP Function
-local ESP = loadstring(game:HttpGet("https://kiriot22.com/releases/ESP.lua"))()
-ESP:Toggle(true)
+local repo = 'https://raw.githubusercontent.com/juywvm/ui-libs/main/Linoria_Lib/';
 
--- Don't worry about it
-ESP.Players = false
-ESP.Color = Color3.new(1,1,1)
-ESP.Traces = false
-ESP.Names = false
-ESP.Boxes = false
-ESP.NPCs = false
-ESP.Items = false
-ESP.Enemies = false
+getgenv().Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/MercyfulSmoked/localhub/main/Library.lua'))()
+local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))();
+local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))();
 
-local win = OrionLib:MakeWindow({Name = "Strucid", HidePremium = true,  IntroEnabled = false});
+local Window = Library:CreateWindow({
+    Title = 'Local Scripts | Premium';
+    Center = true; 
+    AutoShow = true;
+});
 
 
-local lt = win:MakeTab({Name = "Legit",Icon = "", PremiumOnly = false});
-local rt = win:MakeTab({Name = "Rage",Icon = "", PremiumOnly = false});
-local et = win:MakeTab({Name = "ESP",Icon = "", PremiumOnly = false});
+local Tabs = {
+    Main = Window:AddTab('Main');
+    Legit = Window:AddTab('Legit');
+    Rage = Window:AddTab('Rage');
+    Misc = Window:AddTab('Misc');
+    Visuals = Window:AddTab('Visuals');
+    ['Settings'] = Window:AddTab('Settings');
+}
 
-local mm = win:MakeTab({Name = "Misc Toggles",Icon = "", PremiumOnly = false});
-local mb = win:MakeTab({Name = "Misc Buttons",Icon = "", PremiumOnly = false});
+local Automation = Tabs.Main:AddLeftGroupbox('Automation');
+local Legit = Tabs.Legit:AddLeftGroupbox('Legit');
+local Rage = Tabs.Rage:AddLeftGroupbox('Rage');
+local RageR = Tabs.Rage:AddRightGroupbox('Rage');
+local Misc = Tabs.Misc:AddLeftGroupbox('Misc');
+local Visuals = Tabs.Visuals:AddLeftGroupbox('Visuals');
+local MenuGroup = Tabs.Settings:AddRightGroupbox('Menu');
 
--- Variables
-local lp = game.Players.LocalPlayer;
-local Players = game:GetService("Players");
-local TweenService = game:GetService("TweenService");
+getgenv().Library.ToggleKeybind = Options.MenuKeybind;
 
-local Mouse = lp:GetMouse();
+ThemeManager:SetLibrary(getgenv().Library);
+SaveManager:SetLibrary(getgenv().Library);
+SaveManager:IgnoreThemeSettings();
+SaveManager:SetIgnoreIndexes({ 'MenuKeybind' });
+ThemeManager:SetFolder('MyScriptHub');
+SaveManager:SetFolder('MyScriptHub/specific-game');
+SaveManager:BuildConfigSection(Tabs['Settings']);
+ThemeManager:ApplyToTab(Tabs['Settings']);
 
--- Modules
+MenuGroup:AddButton('Unload', function() getgenv().Library:Unload() end);
+MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'Home', NoUI = true, Text = 'Menu keybind'});
 
-local FI = Instance.new("ModuleScript", lp.PlayerGui);
-FI.Name = "Extra";
-FI:SetAttribute("O", true);
+getgenv().Library.ToggleKeybind = Options.MenuKeybind;
 
--- Functions
-local functions = {}
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+
+local Mouse = lp:GetMouse()
+local Camera = workspace.CurrentCamera
+
+local Modules = ReplicatedStorage:WaitForChild("Modules", 1);
+local NetworkModule = Modules:WaitForChild("NetworkModule", 1);
+
+-- // Network Module Bypass
+
+local FakeInstance = Instance.new("ModuleScript", LocalPlayer.PlayerGui);
+FakeInstance.Name = "Extra";
+FakeInstance:SetAttribute("O", true);
+
+local AntiCheatModule
+
+-- // Functions()
+
+local FireServer = function(string,...)
+	if (AntiCheatModule or AntiCheatModule and AntiCheatModule.Parent ~= nil) then
+		AntiCheatModule:FireServer(string,...)
+	end
+end
+
+local InvokeServer = function(string,...)
+	if (AntiCheatModule or AntiCheatModule and AntiCheatModule.Parent ~= nil) then
+		AntiCheatModule:InvokeServer(string,...)
+	end
+end
+
+
+local fc = Drawing.new("Circle")
+fc.Visible = false
+fc.Color = Color3.new(0,0,0)
+fc.Radius = 0
+fc.Filled = false
+fc.Transparency = 1
+
+function getflag(flag)
+    if Toggles[flag] then
+        return Toggles[flag].Value
+    elseif Options[flag] then
+        return Options[flag].Value
+    end;
+end;
+
+function check()
+    if getgenv().Loading then
+        return true
+    else
+        return false
+    end;
+end;
 
 function getchar()
     if lp.Character and not lp.Character:GetAttribute("IsMenuChar") then
@@ -49,20 +116,15 @@ function getchar()
     end;
 end;
 
-function getflag(t)
-    return fl[t].Value
-end;
--- Legit
-
+local functions = {}
 function functions.extend_hitbox(t)
     if (not t) then return end;
 
     local function extend()
-        local lp = game.Players.LocalPlayer
-        local slideExtend = getflag("slideextend")
+        local slideExtend = getflag("ExtendingSize")
         for _, player in ipairs(game.Players:GetChildren()) do
             if player ~= lp and player.Character and player.Character:FindFirstChild("Head") then
-                local vhrp = player.Character[getflag("Part")]
+                local vhrp = player.Character[getflag("PartToExtend")]
                 if game.PlaceId == 3606833500 or player.Team ~= lp.Team or player.Team == nil then
                     if vhrp.Name == "Head" and slideExtend > 5 then
                         vhrp.Size = Vector3.new(5,5,5)
@@ -70,14 +132,13 @@ function functions.extend_hitbox(t)
                         vhrp.Size = Vector3.new(slideExtend, slideExtend, slideExtend)
                     end;
                     vhrp.Transparency = 0.5
-                    vhrp.Color = Color3.new(getflag("Color").R, getflag("Color").G, getflag("Color").B)
-                    print(vhrp.Color)
+                    vhrp.Color = Color3.new(getflag("HitboxColorPicker").R, getflag("HitboxColorPicker").G, getflag("HitboxColorPicker").B)
                 end
             end
         end
     end    
 
-    while task.wait() and getflag("Extender") do
+    while task.wait() and getflag("EHB") do
         pcall(function()
             extend()
         end)
@@ -135,7 +196,7 @@ function functions.AntiBuild(t)
 
     while task.wait(0.2) and getflag("AntiBuild") do
         for _, v in ipairs(game:GetService("Workspace").BuildStuff:GetChildren()) do
-            if not lp.Character:GetAttribute("IsMenuChar") then
+            if not lp.Character:GetAttribute("IsMenuChar") and getflag("AntiBuild") then
                 game.ReplicatedStorage.Network.Remotes.Edit:FireServer(v, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)
             end;
         end
@@ -145,6 +206,7 @@ end;
 function functions.Rejoin()
     game:GetService("TeleportService"):Teleport(game.PlaceId, lp)
 end;
+
 
 function create_ESP(v)
     local bb = Instance.new("BillboardGui")
@@ -188,68 +250,385 @@ function functions.NamesESP(t)
     end;
 end;
 
-function functions.BoxesESP(t)
-    
+local Parts = {"Head","HumanoidRootPart"}
+Legit:AddDropdown('PartToExtend', {
+    Values = Parts,
+    Default = 1,
+    Multi = false,
+
+    Text = 'Part To Extend',
+    Tooltip = 'For Hitbox',
+})
+
+Legit:AddSlider('ExtendingSize', {
+    Text = 'Extending Size',
+    Default = 5,
+    Min = 1,
+    Max = 20,
+    Rounding = 1,
+})
+
+Legit:AddLabel('Hitbox'):AddColorPicker('HitboxColorPicker', {
+    Default = Color3.new(0, 1, 0),
+    Title = 'Hitbox Color',
+})
+
+Legit:AddToggle('EHB', {
+    Text = 'Extend Hitbox';
+    Default = false;
+    Tooltip = 'Extends the selected hitbox';
+})
+
+Toggles["EHB"]:OnChanged(function(v)
+    if not v then return end
+    if getflag("EHB") then
+        pcall(function()
+            functions.extend_hitbox(getflag("EHB"))
+        end);
+    end;
+end)
+
+Rage:AddToggle('Saim', {
+    Text = 'Silent Aim';
+    Default = false;
+    Tooltip = 'Shoots people in fov radius';
+})
+
+RageR:AddSlider('FOV', {
+    Text = 'FOV Radius',
+    Default = 25,
+    Min = 0,
+    Max = 200,
+    Rounding = 1,
+})
+
+
+RageR:AddToggle('SHOWFOV', {
+    Text = 'Show FOV';
+    Default = false;
+    Tooltip = 'Shows the radius for silent aim';
+})
+
+Options["FOV"]:OnChanged(function(v)
+    fc.Radius = v
+end)
+
+Toggles["SHOWFOV"]:OnChanged(function(v)
+    fc.Visible = v
+end)
+
+
+
+
+
+
+Misc:AddToggle('Crashing', {
+    Text = 'Crash Server';
+    Default = false;
+    Tooltip = 'Crashes server';
+})
+
+Misc:AddToggle('NOFD', {
+    Text = 'No Fall Damage';
+    Default = false;
+    Tooltip = 'Disables Fall Damage';
+})
+
+Misc:AddToggle('Antikick', {
+    Text = 'Anti-Kick';
+    Default = false;
+    Tooltip = 'Rejoins on Kick';
+})
+
+Misc:AddToggle('AntiSpec', {
+    Text = 'Anti-Spectate';
+    Default = false;
+    Tooltip = 'Makes you not spectatable';
+})
+
+Misc:AddToggle('AntiBuild', {
+    Text = 'Anti-Build';
+    Default = false;
+    Tooltip = 'Removes building';
+})
+
+Misc:AddToggle('NoClip', {
+    Text = 'NoClip';
+    Default = false;
+    Tooltip = 'Noclips through buildings!';
+}):AddKeyPicker('Noclipkey', { Default = 'Y', NoUI = true, Text = 'Noclip Keybind'});
+
+Misc:AddToggle('FlyScript', {
+    Text = 'Fly';
+    Default = false;
+    Tooltip = 'Flys';
+}):AddKeyPicker('FlyKey', { Default = 'B', NoUI = true, Text = 'Fly Keybind'});
+
+Misc:AddSlider('FlySpeed', {
+    Text = 'Fly Speed',
+    Default = 50,
+    Min = 50,
+    Max = 1000,
+    Rounding = 1,
+})
+
+Misc:AddToggle('TakeEdit', {
+    Text = 'Take Edit';
+    Default = false;
+    Tooltip = 'Gives perms to edit building that youre near';
+}):AddKeyPicker('Editor', { Default = 'N', NoUI = true, Text = 'Edit Keybind'});
+
+
+Toggles["Crashing"]:OnChanged(function(v)
+    if not v then return end
+    if not check() and getflag("Crashing") then
+        pcall(function()
+            functions.Crasher(getflag("Crashing"))
+        end);
+    end;
+end)
+
+function functions.NoFall(t)
+    if not t then return end;
+
+    while task.wait(0.2) and getflag("NOFD") do 
+        if not lp.Character:FindFirstChild("LowerTorso"):FindFirstChild("BouncerTrail") then
+            require(game.ReplicatedStorage.Modules.NetworkModule2):FireServer("Bouncing")
+        end
+    end;
 end;
 
--- Rage
+Toggles["NOFD"]:OnChanged(function(v)
+    if not v then return end
+    if not check() and getflag("NOFD") then
+        pcall(function()
+            functions.NoFall(getflag("NOFD"))
+        end);
+    end;
+end)
 
+Toggles["Antikick"]:OnChanged(function(v)
+    while getflag("Antikick") and task.wait(1) do 
+        if not getflag("Antikick") then return end
+        pcall(function()
+            getui()
+        end);
+    end;
+end)
 
-
--- Misc
-
-
--- Hooks
-
-
--- Legit
-
-lt:AddDropdown({Name = "Part to hit", Default = "Head" ,Options = {"Head","HumanoidRootPart"}, Flag = "Part", Callback = function() end})
-
-lt:AddToggle({Name = "Extend Hitbox", Default = false, Flag = "Extender", Callback = functions.extend_hitbox});
-
-lt:AddSlider({Name = "Extending Size", Min = 1, Max = 20, Default = 5, Color = Color3.fromRGB(255,255,255), Increment = 1, Flag = "slideextend", Callback = function(t) end})
-
-lt:AddColorpicker({Name = "Color of hitbox", Default = Color3.fromRGB(0,0,0), Flag = "Color", Callback = function(t) end})
-
--- Rage
-
-
--- ESP
-
-et:AddToggle({Name = "Names", Default = false, Flag = "Names", Callback = functions.NamesESP});
-
-et:AddColorpicker({Name = "Color", Default = Color3.fromRGB(1,1,1), Flag = "ESPCOLOR", Callback = function(t) end})
-
--- Misc
-
-mm:AddToggle({Name = "Crash server (Spawn in)", Default = false, Flag = "Crasher", Callback = functions.Crasher});
-
-mm:AddToggle({Name = "No Fall Damage", Default = false, Flag = "NOFD", Callback = functions.NoFall});
-
-mm:AddToggle({Name = "Anti-Kick", Default = true, Flag = "Antikick", Callback = functions.AntiKick});
-
-mm:AddToggle({Name = "Anti-Spectate", Default = true, Flag = "AntiSpec", Callback = functions.AntiSpectate});
-
-mm:AddToggle({Name = "Anti-Build", Default = false, Flag = "AntiBuild", Callback = functions.AntiBuild});
-
-
-mb:AddButton({Name = "Destroy buildings",Callback = functions.DestroyBuild})
-
-mb:AddButton({Name = "Rejoin",Callback = functions.Rejoin})
-
-OrionLib:Init()
-
-task.spawn(function()
-    while task.wait(1) do
-        if getflag("Antikick") then
-            pcall(function()
-                getui()
-            end);
-        end;
-        if getflag("AntiSpec") then
+Toggles["AntiSpec"]:OnChanged(function(v)
+    while getflag("AntiSpec") and task.wait(1) do
+        if not getflag("AntiSpec") then return end
+        pcall(function()
             game.ReplicatedStorage.Network.LookDir:FireServer(0/0)
+        end);
+    end;
+end)
+
+Toggles["AntiBuild"]:OnChanged(function(v)
+    if not v  then return end
+    if not check() and getflag("AntiBuild") then
+        pcall(function()
+            functions.AntiBuild(getflag("AntiBuild"))
+        end);
+    end;
+end)
+
+local UserInputService = game:GetService("UserInputService")
+function fly()
+    local Velocity;
+    if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and getflag("FlyScript") then
+        local LookVector = workspace.Camera.CFrame.LookVector
+        local RightVector = workspace.Camera.CFrame.RightVector
+        local UpVector = workspace.Camera.CFrame.UpVector
+        local Velocity = Vector3.new()
+        workspace.Gravity = 0
+        if UserInputService:IsKeyDown("W") then
+            Velocity = Velocity + LookVector * getflag("FlySpeed") or 75
+        end
+        if UserInputService:IsKeyDown("S") then
+            Velocity = Velocity - LookVector * getflag("FlySpeed") or 75
+        end
+        if UserInputService:IsKeyDown("A") then
+            Velocity = Velocity - RightVector * getflag("FlySpeed") or 75
+        end
+        if UserInputService:IsKeyDown("D") then
+            Velocity = Velocity + RightVector * getflag("FlySpeed") or 75
+        end
+        if UserInputService:IsKeyDown("LeftShift") then
+            Velocity = Velocity - UpVector * getflag("FlySpeed") or 75
+        end
+        if UserInputService:IsKeyDown("Space") then
+            Velocity = Velocity + UpVector * getflag("FlySpeed") or 75
+        end
+        lp.Character.HumanoidRootPart.Velocity = Velocity
+    else
+        Velocity = Vector3.new()
+        lp.Character.HumanoidRootPart.Velocity = Velocity
+        workspace.Gravity = 95
+    end
+end;
+
+Toggles["FlyScript"]:OnChanged(function(v)
+    if not v then return end
+    while not check() and getflag("FlyScript") and task.wait() do
+        fly()
+    end;
+end)
+
+Options["FlyKey"]:OnClick(function(v)
+    Toggles["FlyScript"].Value = not getflag("FlyScript")
+    Toggles["FlyScript"]:SetValue(getflag("FlyScript"))
+end)
+
+
+Toggles["NoClip"]:OnChanged(function(v)
+    if not check() then
+        if Toggles["NoClip"].Value then
+            while Toggles["NoClip"].Value and task.wait() do
+                for _,v in ipairs(lp.Character:GetChildren()) do 
+                    if v:IsA("MeshPart") or v:IsA("Part") and v.CanCollide then
+                        v.CanCollide = false
+                    end;
+                end;
+            end;
+        else
+            for _,v in ipairs(lp.Character:GetChildren()) do 
+                if v.Name == "HumanoidRootPart" or v.Name == "UpperTorso" and v.CanCollide then
+                    v.CanCollide = true
+                end;
+            end;
         end;
     end;
+end)
+
+Options["Noclipkey"]:OnClick(function(v)
+    Toggles["NoClip"].Value = not getflag("NoClip")
+    Toggles["NoClip"]:SetValue(getflag("NoClip"))
+end)
+
+
+Toggles["TakeEdit"]:OnChanged(function(v)
+    if Toggles["TakeEdit"].Value then
+        if not lp.Character:GetAttribute("IsMenuChar") then
+            local closestPart
+                for _, build in ipairs(game:GetService("Workspace").BuildStuff:GetChildren()) do
+                    local distance = (lp.Character.HumanoidRootPart.Position - build.Position).magnitude
+                    if distance < 20 then
+                        game.ReplicatedStorage.Network.Remotes.Edit:FireServer(build, 0)
+                    end
+                end
+        end;
+    end;
+end)
+
+Options["Editor"]:OnClick(function(v)
+    Toggles["TakeEdit"].Value = not getflag("TakeEdit")
+    Toggles["TakeEdit"]:SetValue(getflag("TakeEdit"))
+end)
+
+Visuals:AddToggle('Names', {
+    Text = 'Name ESP';
+    Default = false;
+    Tooltip = 'Shows you where people are';
+})
+
+Visuals:AddLabel('NameTag'):AddColorPicker('ESPCOLOR', {
+    Default = Color3.new(0, 1, 0),
+    Title = 'ESP Name Color',
+})
+
+
+Toggles["Names"]:OnChanged(function(v)
+    if not check() and getflag("Names") then
+        pcall(function()
+            functions.NamesESP(getflag("Names"))
+        end);
+    elseif not check() and not getflag("Names") then
+        for _,v in ipairs(Players:GetPlayers()) do 
+            if v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                if v.Character.HumanoidRootPart:FindFirstChild("Test") then 
+                    v.Character.HumanoidRootPart:FindFirstChild("Test"):Destroy()
+                end;
+            end;
+        end;
+    end;
+end)
+local Holding;
+local Mouse = lp:GetMouse()
+function GetClosestPlayer()
+    local Closest;
+    local MousePos = Vector2.new(Mouse.X, Mouse.Y)
+    for _, Player in pairs(game.Players:GetPlayers()) do
+        if Player ~= lp then
+            local Character = Player.Character
+            if Character then
+                local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+                if HumanoidRootPart then
+                    local vector, onScreen = Camera:WorldToScreenPoint(HumanoidRootPart.Position)
+                    if onScreen then
+                        local Distance = (MousePos - Vector2.new(vector.X, vector.Y)).Magnitude
+                        if Distance <= getflag("FOV") then
+                            Closest = Player
+                        end
+                    end
+                end
+            end;
+        end
+    end
+    return Closest
+end
+
+local getinfo = getinfo or debug.getinfo or getgenv().getupvalue
+local getupvalue = getupvalue or debug.getupvalue or getgenv().getupvalue
+
+lp.PlayerGui.ChildAdded:Connect(function(child)
+	if tostring(child) == 'MainGui' then
+    task.wait(3)
+    getgenv().getupvalue(require(v.NewLocal.Tools.Tool.Gun.Auto).ShootLogic, 1).GetMouseInfo = function(...)     
+            if getflag("Saim") and getgenv().getinfo(getcallingfunction(3)).name ~= 'CheckInteraction' and GetClosestPlayer() and GetClosestPlayer().Character:FindFirstChild("Head") then                          
+                return GetClosestPlayer().Character["Head"], GetClosestPlayer().Character["Head"].Position
+            end
+                return Mouse.Target, Mouse.Hit.p
+            end
+        end
+    end
+end)
+
+local OldSelf
+OldSelf = hookfunction(game.ReplicatedStorage.Network.RemoteEvent.FireServer,function(self,...)
+   local Args = {...}
+    if Args[2] == 5.5 and lp.PlayerGui.FindFirstChild(lp.PlayerGui,'MainGui') then
+            Args[5] = require(lp.PlayerGui.MainGui.NewLocal.Shared).CurrIndex
+            Args[6] = Args[4][1][1]
+    end 
+   return OldSelf(self,unpack(Args))
+end)
+
+
+task.spawn(function()
+    local UserInputService = game:GetService("UserInputService")
+
+    UserInputService.InputBegan:Connect(function(inputObject)
+        if inputObject.UserInputType == Enum.UserInputType.MouseButton2 then
+            Holding = true
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(inputObject)
+        if inputObject.UserInputType == Enum.UserInputType.MouseButton2 then
+            Holding = false
+        end
+    end)
 end);
 
+game:GetService("RunService").RenderStepped:Connect(function()
+    task.spawn(function()
+        fc.Position = Vector2.new(Mouse.X, Mouse.Y + 35)
+    end);
+end);
+
+setthreadidentity(2)
+AntiCheatModule = require(NetworkModule):Initialize(FakeInstance)
+setthreadidentity(8)
+getgenv().Loading = false
